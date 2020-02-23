@@ -15,7 +15,7 @@ extension WidgetTesterRichEditExtension on WidgetTester {
 }
 
 extension SpanBuilderRichTextFinderExtension on Finder {
-  /// given a finder for [SpanBuilderWidget] 
+  /// given a finder for [SpanBuilderWidget]
   Finder descendingRichText() =>
       find.descendant(of: this, matching: find.byType(RichText));
 }

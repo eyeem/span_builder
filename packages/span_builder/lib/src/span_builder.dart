@@ -1,15 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-extension AsTapSpanExtension on String {
-  /// this should be used from within [SpanBuilderWidget] which will
-  /// take care of disposing recognizers
-  TextSpan asTapSpan(void Function() onTap, {TextStyle style}) => TextSpan(
-      text: this,
-      style: style,
-      recognizer: TapGestureRecognizer()..onTap = onTap);
-}
-
 /// represents position of a span in some plain text
 class SpanPosition {
   const SpanPosition(
@@ -20,6 +11,36 @@ class SpanPosition {
   final int start;
   final int end;
   final InlineSpan span;
+}
+
+typedef RecognizerBuilder = GestureRecognizer Function(Function() onTap);
+
+/// due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
+/// you need to dispose text links & we don't want to handle recongnizer lifecycle inside [StringBuilder]
+/// as we want to reuse [StringBuilder] therefore here is this class that will create us TextSpans with recognizers
+/// managed by whoever that is passing [RecognizerBuilder] to the [asManagedTextSpan]
+class _FixedTextSpan extends TextSpan {
+  const _FixedTextSpan({
+    this.onTap,
+    String text,
+    TextStyle style,
+    String semanticsLabel,
+  }) : super(text: text, style: style);
+  _FixedTextSpan.fromTextSpan(TextSpan textSpan, {Function() onTap})
+      : this(
+            text: textSpan.text,
+            style: textSpan.style,
+            semanticsLabel: textSpan.semanticsLabel,
+            onTap: onTap);
+  final Function() onTap;
+
+  TextSpan asManagedTextSpan(RecognizerBuilder recognizerBuilder) {
+    return TextSpan(
+        style: style,
+        text: text,
+        semanticsLabel: semanticsLabel,
+        recognizer: onTap == null ? null : recognizerBuilder?.call(onTap));
+  }
 }
 
 /// given some plain text, e.g.: "The quick brown fox" allows you to [apply]
@@ -42,9 +63,13 @@ class SpanBuilder {
   SpanBuilder(this.sourceText);
   final String sourceText;
   final entities = <SpanPosition>[];
-  bool isDisposed = false;
 
-  SpanBuilder apply(InlineSpan span, {String whereText, int from, int to}) {
+  SpanBuilder apply(InlineSpan span,
+      {String whereText, int from, int to, Function() onTap}) {
+    if (span is TextSpan) {
+      span = _FixedTextSpan.fromTextSpan(span, onTap: onTap);
+    }
+
     if (whereText == null && from == null && to == null) {
       if (span is TextSpan) {
         whereText = span.text;
@@ -62,20 +87,8 @@ class SpanBuilder {
     return this;
   }
 
-  /// due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
-  /// you need to dispose text links
-  void dispose() {
-    isDisposed = true;
-    for (final entity in entities) {
-      if (entity.span is TextSpan) {
-        final TextSpan textSpan = entity.span;
-        textSpan.recognizer?.dispose();
-      }
-    }
-  }
-
-  List<InlineSpan> build() =>
-      isDisposed ? [] : _computeSpans(sourceText, entities);
+  List<InlineSpan> build({RecognizerBuilder recognizerBuilder}) =>
+      _computeSpans(sourceText, entities, recognizerBuilder);
 }
 
 /// poorly designed facility widget to help dispose recognizers from TextSpans
@@ -83,14 +96,12 @@ class SpanBuilder {
 class SpanBuilderWidget extends StatefulWidget {
   const SpanBuilderWidget({
     Key key,
-    @required this.format,
     @required this.richTextBuilder,
     @required this.text,
     this.defaultStyle,
   }) : super(key: key);
-  final Function(SpanBuilder text) format;
   final RichText Function(InlineSpan inlineSpan) richTextBuilder;
-  final String text;
+  final SpanBuilder text;
   final TextStyle defaultStyle;
 
   @override
@@ -98,49 +109,72 @@ class SpanBuilderWidget extends StatefulWidget {
 }
 
 class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
-  SpanBuilder _spanBuilder;
-  SpanBuilder _instigate() {
-    final builder = SpanBuilder(widget.text);
-    widget.format(builder);
-    return builder;
+  TextSpan _textSpan;
+  final _recongnizers = <GestureRecognizer>[];
+
+  GestureRecognizer recognizerBuilder(Function() onTap) {
+    // debugPrint("CREATE RECOGNIZER for ${onTap.hashCode}");
+    final recognizer = TapGestureRecognizer()..onTap = onTap;
+    _recongnizers.add(recognizer);
+    return recognizer;
+  }
+
+  void _disposeOldRecognizers() {
+    for (final recongnizer in _recongnizers) {
+      // debugPrint("DISPOSE RECOGNIZER for ${(recongnizer as TapGestureRecognizer).onTap.hashCode}");
+      recongnizer.dispose();
+    }
+    _recongnizers.clear();
+  }
+
+  void _instigate() {
+    _disposeOldRecognizers();
+    _textSpan = TextSpan(
+        children: widget.text.build(recognizerBuilder: recognizerBuilder),
+        style: widget.defaultStyle);
   }
 
   @override
   void initState() {
     super.initState();
-    _spanBuilder = _instigate();
+    _instigate();
   }
 
   @override
   void didUpdateWidget(SpanBuilderWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.text != widget.text) {
-      _spanBuilder?.dispose();
-      _spanBuilder = _instigate();
-      setState(() {});
+      setState(() {
+        _instigate();
+      });
     }
   }
 
   @override
-  Widget build(BuildContext context) => widget.richTextBuilder(
-      TextSpan(children: _spanBuilder.build(), style: widget.defaultStyle));
+  Widget build(BuildContext context) => widget.richTextBuilder(_textSpan);
 
   @override
   void dispose() {
     super.dispose();
-    _spanBuilder?.dispose();
+    _disposeOldRecognizers();
   }
 }
 
 /// CONTRACT: entities must come sorted by their appearance and should not overlap
-List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities) {
+List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities,
+    RecognizerBuilder recognizerBuilder) {
   final output = <InlineSpan>[];
   var currentIndex = 0;
   for (final entity in entities) {
     if (currentIndex < entity.start) {
       output.add(TextSpan(text: text.substring(currentIndex, entity.start)));
     }
-    output.add(entity.span);
+    final span = entity.span;
+    if (span is _FixedTextSpan) {
+      output.add(span.asManagedTextSpan(recognizerBuilder));
+    } else {
+      output.add(span);
+    }
     currentIndex = entity.end;
   }
   if (currentIndex < text.length) {

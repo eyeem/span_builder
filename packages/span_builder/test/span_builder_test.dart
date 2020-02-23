@@ -25,14 +25,12 @@ void main() {
   testWidgets('test span builder widget', (WidgetTester tester) async {
     var tapped = false;
     await tester.pumpWidget(SpanBuilderWidget(
-      text: "The quick brown fox",
-      format: (text) => text
-          .apply("brown".asTapSpan(() {
-            tapped = true;
-          }))
-          .apply(const TextSpan(text: "🦊"), whereText: "fox"),
-      richTextBuilder: (spans) => RichText(
-        text: TextSpan(children: spans),
+      text: SpanBuilder("The quick brown fox").apply(TextSpan(text: "brown"),
+          onTap: () {
+        tapped = true;
+      }).apply(const TextSpan(text: "🦊"), whereText: "fox"),
+      richTextBuilder: (text) => RichText(
+        text: text,
         textDirection: TextDirection.ltr,
       ),
     ));
@@ -51,4 +49,63 @@ void main() {
 
     expect(tapped, isTrue);
   });
+
+  testWidgets('changing state', (WidgetTester tester) async {
+    await tester.pumpWidget(_FakeSpanShifter());
+
+    final buttonFinder = find.text("PRESS ME");
+
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+  });
+}
+
+class _FakeSpanShifter extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _FakeSpanShifterState();
+}
+
+class _FakeSpanShifterState extends State<StatefulWidget> {
+  final texts = <SpanBuilder>[
+    SpanBuilder("The quick brown fox")
+        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "🦊"), whereText: "fox"),
+    SpanBuilder("The quicker brown fox")
+        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "🦊"), whereText: "fox", onTap: () {}),
+    SpanBuilder("The quickest brown fox")
+        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "🦊"), whereText: "fox")
+  ];
+  var counter = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        GestureDetector(
+            child: Text("PRESS ME", textDirection: TextDirection.ltr),
+            onTap: () {
+              setState(() {
+                counter++;
+              });
+            }),
+        SpanBuilderWidget(
+            text: texts[counter % texts.length],
+            richTextBuilder: (text) => RichText(
+                  text: text,
+                  textDirection: TextDirection.ltr,
+                )),
+      ],
+    );
+  }
 }

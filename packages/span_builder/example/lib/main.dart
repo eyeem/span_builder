@@ -15,14 +15,14 @@ class MyApp extends StatelessWidget {
             appBar: AppBar(title: Text("span_builder")),
             body: Center(
                 child: SpanBuilderWidget(
-                    text: "The quick brown fox jumps over the lazy dog",
-                    defaultStyle: TextStyle(color: Colors.black),
-                    format: (text) => text
+                    text: SpanBuilder(
+                            "The quick brown fox jumps over the lazy dog")
                         .apply(TextSpan(
                             text: "brown",
                             style: TextStyle(fontWeight: FontWeight.bold)))
                         .apply(TextSpan(text: "🦊"), whereText: "fox")
                         .apply(TextSpan(text: "🐶"), whereText: "dog"),
+                    defaultStyle: TextStyle(color: Colors.black),
                     richTextBuilder: (text) =>
                         RichText(text: text, textAlign: TextAlign.center)))));
   }
