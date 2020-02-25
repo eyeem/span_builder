@@ -2,10 +2,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 /// represents position of a span in some plain text
-class SpanPosition {
-  const SpanPosition(
+class SpanEntity {
+  const SpanEntity(
       {@required this.start, @required this.end, @required this.span})
       : assert(start >= 0),
+
+        /// we only accept _ManagedTextSpans since we must take care of managing the recognizer
+        assert((span is TextSpan && span is _ManagedTextSpan) ||
+            !(span is TextSpan)),
         assert(end > start);
 
   final int start;
@@ -13,11 +17,16 @@ class SpanPosition {
   final InlineSpan span;
 }
 
+extension ManagedTextSpanExtension on TextSpan {
+  InlineSpan managed([RecognizerBuilder recognizerBuilder]) =>
+      _ManagedTextSpan.fromTextSpan(this, recognizerBuilder: recognizerBuilder);
+}
+
 typedef RecognizerBuilder = GestureRecognizer Function();
 typedef _RecognizerBuilder = GestureRecognizer Function(_ManagedTextSpan);
 
-/// due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
-/// you need to dispose text links & we don't want to handle recongnizer lifecycle inside [StringBuilder]
+/// Due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
+/// you need to dispose "text links" & we don't want to handle recongnizer lifecycle inside [StringBuilder]
 /// as we want to reuse [StringBuilder] therefore here is this class that will create us TextSpans with recognizers
 /// managed by whoever that is passing [RecognizerBuilder] to the [asManagedTextSpan]
 class _ManagedTextSpan extends TextSpan {
@@ -64,7 +73,7 @@ class _ManagedTextSpan extends TextSpan {
 class SpanBuilder {
   SpanBuilder(this.sourceText);
   final String sourceText;
-  final entities = <SpanPosition>[];
+  final entities = <SpanEntity>[];
 
   SpanBuilder apply(InlineSpan span,
       {String whereText,
@@ -72,33 +81,49 @@ class SpanBuilder {
       int to,
       Function() onTap,
       RecognizerBuilder recognizerBuilder}) {
+    /// turn any [onTap] into [RecognizerBuilder]
     if (onTap != null && recognizerBuilder == null) {
       recognizerBuilder = () => TapGestureRecognizer()..onTap = onTap;
     }
 
+    /// convert [TextSpan] into [_ManagedTextSpan] with a [RecoginzerBuilder]
     if (span is TextSpan) {
-      span = _ManagedTextSpan.fromTextSpan(span,
-          recognizerBuilder: recognizerBuilder);
+      /// ignore: avoid_as
+      span = (span as TextSpan).managed(recognizerBuilder);
     }
 
-    if (whereText == null && from == null && to == null) {
+    /// if [whereText] is not provided then we try to figure it out:
+    /// 1. from passed [TextSpan]
+    /// 2. from [from, to] range
+    if (whereText == null) {
       if (span is TextSpan) {
         whereText = span.text;
       } else {
-        return this;
+        if (from == null && to == null) {
+          return this;
+        }
+        whereText = sourceText.substring(from ?? 0, to ?? sourceText.length);
       }
     }
 
+    /// if we pass whereText + from, we will try to do the search starting from that point
+    /// therefor we need offset
     final offset = from ?? 0;
 
-    final _sourceText = sourceText.substring(from ?? 0, to ?? sourceText.length);
+    final _sourceText =
+        sourceText.substring(from ?? 0, to ?? sourceText.length);
 
     if (whereText != null) {
       from = _sourceText.indexOf(whereText);
+      if (from == -1) {
+        return this;
+      }
       to = from + whereText.length;
     }
 
-    entities.add(SpanPosition(start: offset + from, end: offset + to, span: span));
+    /// finally we appen calculated SpanPosition
+    entities
+        .add(SpanEntity(start: offset + from, end: offset + to, span: span));
     return this;
   }
 
@@ -185,7 +210,7 @@ class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
 }
 
 /// CONTRACT: entities must come sorted by their appearance and should not overlap
-List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities,
+List<InlineSpan> _computeSpans(String text, List<SpanEntity> entities,
     _RecognizerBuilder recognizerBuilder) {
   final output = <InlineSpan>[];
   var currentIndex = 0;

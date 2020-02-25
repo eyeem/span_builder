@@ -72,6 +72,36 @@ void main() {
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
   });
+
+  test('__TORA__ TORA TORA', () async {
+    const bold = TextStyle(fontWeight: FontWeight.bold);
+    final spans = SpanBuilder("TORA TORA TORA")
+        .apply(const TextSpan(text: "TORA", style: bold))
+        .build();
+    expect(spans, hasLength(2));
+    expect(spans[0], isInstanceOf<TextSpan>());
+    expect((spans[0] as TextSpan).style, bold);
+  });
+
+  test('TORA __TORA__ TORA', () async {
+    const bold = TextStyle(fontWeight: FontWeight.bold);
+    final spans = SpanBuilder("TORA TORA TORA")
+        .apply(const TextSpan(text: "TORA", style: bold), from: 1)
+        .build();
+    expect(spans, hasLength(3));
+    expect(spans[1], isInstanceOf<TextSpan>());
+    expect((spans[1] as TextSpan).style, bold);
+  });
+
+  test('TORA TORA __TORA__', () async {
+    const bold = TextStyle(fontWeight: FontWeight.bold);
+    final spans = SpanBuilder("TORA TORA TORA")
+        .apply(const TextSpan(text: "TORA", style: bold), from: 6)
+        .build();
+    expect(spans, hasLength(2));
+    expect(spans[1], isInstanceOf<TextSpan>());
+    expect((spans[1] as TextSpan).style, bold);
+  });
 }
 
 class _FakeSpanShifter extends StatefulWidget {

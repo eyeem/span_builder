@@ -4,11 +4,16 @@
 span_builder_md = File.read('packages/span_builder/README.md').strip
 span_builder_test_md = File.read('packages/span_builder_test/README.md').strip
 
-readme = """#Span Builder For Flutter
+readme = """# Span Builder For Flutter
 
 #{span_builder_md}
 
 #{span_builder_test_md}
+
+### Read More
+
+- [Make text styling more effective with RichText widget](https://medium.com/flutter-community/make-text-styling-more-effective-with-richtext-widget-b0e0cb4771ef) by _Darshan Kawar
+_
 """
 
 File.write("README.md", readme)
