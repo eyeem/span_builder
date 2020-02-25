@@ -12,18 +12,23 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.green,
         ),
         home: Scaffold(
-            appBar: AppBar(title: Text("span_builder")),
-            body: Center(
-                child: SpanBuilderWidget(
-                    text: SpanBuilder(
+            appBar: AppBar(title: const Text("span_builder")),
+            body: Builder(
+                builder: (context) => Center(
+                    child: SpanBuilderWidget(
+                        text: SpanBuilder(
                             "The quick brown fox jumps over the lazy dog")
-                        .apply(TextSpan(
-                            text: "brown",
-                            style: TextStyle(fontWeight: FontWeight.bold)))
-                        .apply(TextSpan(text: "🦊"), whereText: "fox")
-                        .apply(TextSpan(text: "🐶"), whereText: "dog"),
-                    defaultStyle: TextStyle(color: Colors.black),
-                    richTextBuilder: (text) =>
-                        RichText(text: text, textAlign: TextAlign.center)))));
+                          ..apply(const TextSpan(
+                              text: "brown",
+                              style: TextStyle(fontWeight: FontWeight.bold)))
+                          ..apply(const TextSpan(text: "🦊"), whereText: "fox")
+                          ..apply(const TextSpan(text: "jumps"), onTap: () {
+                            Scaffold.of(context).showSnackBar(
+                                const SnackBar(content: Text("weeeee")));
+                          })
+                          ..apply(const TextSpan(text: "🐶"), whereText: "dog"),
+                        defaultStyle: TextStyle(color: Colors.black),
+                        richTextBuilder: (text) => RichText(
+                            text: text, textAlign: TextAlign.center))))));
   }
 }

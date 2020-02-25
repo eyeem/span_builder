@@ -25,7 +25,7 @@ class _FixedTextSpan extends TextSpan {
     String text,
     TextStyle style,
     String semanticsLabel,
-  }) : super(text: text, style: style);
+  }) : super(text: text, style: style, semanticsLabel: semanticsLabel);
   _FixedTextSpan.fromTextSpan(TextSpan textSpan, {Function() onTap})
       : this(
             text: textSpan.text,
