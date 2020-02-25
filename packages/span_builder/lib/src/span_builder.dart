@@ -13,7 +13,8 @@ class SpanPosition {
   final InlineSpan span;
 }
 
-typedef RecognizerBuilder = GestureRecognizer Function(Function() onTap);
+typedef RecognizerBuilder = GestureRecognizer Function();
+typedef _RecognizerBuilder = GestureRecognizer Function(_FixedTextSpan);
 
 /// due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
 /// you need to dispose text links & we don't want to handle recongnizer lifecycle inside [StringBuilder]
@@ -21,25 +22,26 @@ typedef RecognizerBuilder = GestureRecognizer Function(Function() onTap);
 /// managed by whoever that is passing [RecognizerBuilder] to the [asManagedTextSpan]
 class _FixedTextSpan extends TextSpan {
   const _FixedTextSpan({
-    this.onTap,
+    this.recognizerBuilder,
     String text,
     TextStyle style,
     String semanticsLabel,
   }) : super(text: text, style: style, semanticsLabel: semanticsLabel);
-  _FixedTextSpan.fromTextSpan(TextSpan textSpan, {Function() onTap})
+  _FixedTextSpan.fromTextSpan(TextSpan textSpan,
+      {RecognizerBuilder recognizerBuilder})
       : this(
             text: textSpan.text,
             style: textSpan.style,
             semanticsLabel: textSpan.semanticsLabel,
-            onTap: onTap);
-  final Function() onTap;
+            recognizerBuilder: recognizerBuilder);
+  final RecognizerBuilder recognizerBuilder;
 
-  TextSpan asManagedTextSpan(RecognizerBuilder recognizerBuilder) {
+  TextSpan withManagedRecognizer(GestureRecognizer managedRecognizer) {
     return TextSpan(
         style: style,
         text: text,
         semanticsLabel: semanticsLabel,
-        recognizer: onTap == null ? null : recognizerBuilder?.call(onTap));
+        recognizer: managedRecognizer);
   }
 }
 
@@ -65,9 +67,18 @@ class SpanBuilder {
   final entities = <SpanPosition>[];
 
   SpanBuilder apply(InlineSpan span,
-      {String whereText, int from, int to, Function() onTap}) {
+      {String whereText,
+      int from,
+      int to,
+      Function() onTap,
+      RecognizerBuilder recognizerBuilder}) {
+    if (onTap != null && recognizerBuilder == null) {
+      recognizerBuilder = () => TapGestureRecognizer()..onTap = onTap;
+    }
+
     if (span is TextSpan) {
-      span = _FixedTextSpan.fromTextSpan(span, onTap: onTap);
+      span = _FixedTextSpan.fromTextSpan(span,
+          recognizerBuilder: recognizerBuilder);
     }
 
     if (whereText == null && from == null && to == null) {
@@ -87,7 +98,7 @@ class SpanBuilder {
     return this;
   }
 
-  List<InlineSpan> build({RecognizerBuilder recognizerBuilder}) =>
+  List<InlineSpan> build({_RecognizerBuilder recognizerBuilder}) =>
       _computeSpans(sourceText, entities, recognizerBuilder);
 }
 
@@ -106,23 +117,32 @@ class SpanBuilderWidget extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() => _SpanBuilderWidgetState();
+
+  /// usful for verifying if recognizer are indeed being disposed
+  static bool debugPrint = false;
 }
 
 class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
   TextSpan _textSpan;
   final _recongnizers = <GestureRecognizer>[];
 
-  GestureRecognizer recognizerBuilder(Function() onTap) {
-    // debugPrint("CREATE RECOGNIZER for ${onTap.hashCode}");
-    final recognizer = TapGestureRecognizer()..onTap = onTap;
-    _recongnizers.add(recognizer);
+  GestureRecognizer recognizerBuilder(_FixedTextSpan textSpan) {
+    final recognizer = textSpan.recognizerBuilder?.call();
+    if (recognizer != null) {
+      if (SpanBuilderWidget.debugPrint) {
+        debugPrint("CREATE RECOGNIZER for ${recognizer.hashCode}");
+      }
+      _recongnizers.add(recognizer);
+    }
     return recognizer;
   }
 
   void _disposeOldRecognizers() {
-    for (final recongnizer in _recongnizers) {
-      // debugPrint("DISPOSE RECOGNIZER for ${(recongnizer as TapGestureRecognizer).onTap.hashCode}");
-      recongnizer.dispose();
+    for (final recognizer in _recongnizers) {
+      if (SpanBuilderWidget.debugPrint) {
+        debugPrint("DISPOSE RECOGNIZER for ${recognizer.hashCode}");
+      }
+      recognizer.dispose();
     }
     _recongnizers.clear();
   }
@@ -162,7 +182,7 @@ class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
 
 /// CONTRACT: entities must come sorted by their appearance and should not overlap
 List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities,
-    RecognizerBuilder recognizerBuilder) {
+    _RecognizerBuilder recognizerBuilder) {
   final output = <InlineSpan>[];
   var currentIndex = 0;
   for (final entity in entities) {
@@ -171,7 +191,8 @@ List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities,
     }
     final span = entity.span;
     if (span is _FixedTextSpan) {
-      output.add(span.asManagedTextSpan(recognizerBuilder));
+      final managedRecognizer = recognizerBuilder?.call(span);
+      output.add(span.withManagedRecognizer(managedRecognizer));
     } else {
       output.add(span);
     }

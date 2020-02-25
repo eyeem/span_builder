@@ -5,6 +5,10 @@ import 'package:span_builder/span_builder.dart';
 // ignore_for_file: avoid_as
 
 void main() {
+  setUp(() {
+    SpanBuilderWidget.debugPrint = true;
+  });
+
   test('test span builder', () async {
     final spans = SpanBuilder("The quick brown fox")
         .apply(const TextSpan(
@@ -25,10 +29,11 @@ void main() {
   testWidgets('test span builder widget', (WidgetTester tester) async {
     var tapped = false;
     await tester.pumpWidget(SpanBuilderWidget(
-      text: SpanBuilder("The quick brown fox").apply(TextSpan(text: "brown"),
-          onTap: () {
-        tapped = true;
-      }).apply(const TextSpan(text: "🦊"), whereText: "fox"),
+      text: SpanBuilder("The quick brown fox")
+        ..apply(const TextSpan(text: "brown"), onTap: () {
+          tapped = true;
+        })
+        ..apply(const TextSpan(text: "🦊"), whereText: "fox"),
       richTextBuilder: (text) => RichText(
         text: text,
         textDirection: TextDirection.ltr,
@@ -77,13 +82,13 @@ class _FakeSpanShifter extends StatefulWidget {
 class _FakeSpanShifterState extends State<StatefulWidget> {
   final texts = <SpanBuilder>[
     SpanBuilder("The quick brown fox")
-        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "brown"), onTap: () {})
         .apply(const TextSpan(text: "🦊"), whereText: "fox"),
     SpanBuilder("The quicker brown fox")
-        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "brown"), onTap: () {})
         .apply(const TextSpan(text: "🦊"), whereText: "fox", onTap: () {}),
     SpanBuilder("The quickest brown fox")
-        .apply(TextSpan(text: "brown"), onTap: () {})
+        .apply(const TextSpan(text: "brown"), onTap: () {})
         .apply(const TextSpan(text: "🦊"), whereText: "fox")
   ];
   var counter = 0;
@@ -93,7 +98,7 @@ class _FakeSpanShifterState extends State<StatefulWidget> {
     return Column(
       children: <Widget>[
         GestureDetector(
-            child: Text("PRESS ME", textDirection: TextDirection.ltr),
+            child: const Text("PRESS ME", textDirection: TextDirection.ltr),
             onTap: () {
               setState(() {
                 counter++;
