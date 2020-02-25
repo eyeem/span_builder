@@ -14,20 +14,20 @@ class SpanPosition {
 }
 
 typedef RecognizerBuilder = GestureRecognizer Function();
-typedef _RecognizerBuilder = GestureRecognizer Function(_FixedTextSpan);
+typedef _RecognizerBuilder = GestureRecognizer Function(_ManagedTextSpan);
 
 /// due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
 /// you need to dispose text links & we don't want to handle recongnizer lifecycle inside [StringBuilder]
 /// as we want to reuse [StringBuilder] therefore here is this class that will create us TextSpans with recognizers
 /// managed by whoever that is passing [RecognizerBuilder] to the [asManagedTextSpan]
-class _FixedTextSpan extends TextSpan {
-  const _FixedTextSpan({
+class _ManagedTextSpan extends TextSpan {
+  const _ManagedTextSpan({
     this.recognizerBuilder,
     String text,
     TextStyle style,
     String semanticsLabel,
   }) : super(text: text, style: style, semanticsLabel: semanticsLabel);
-  _FixedTextSpan.fromTextSpan(TextSpan textSpan,
+  _ManagedTextSpan.fromTextSpan(TextSpan textSpan,
       {RecognizerBuilder recognizerBuilder})
       : this(
             text: textSpan.text,
@@ -77,7 +77,7 @@ class SpanBuilder {
     }
 
     if (span is TextSpan) {
-      span = _FixedTextSpan.fromTextSpan(span,
+      span = _ManagedTextSpan.fromTextSpan(span,
           recognizerBuilder: recognizerBuilder);
     }
 
@@ -126,7 +126,7 @@ class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
   TextSpan _textSpan;
   final _recongnizers = <GestureRecognizer>[];
 
-  GestureRecognizer recognizerBuilder(_FixedTextSpan textSpan) {
+  GestureRecognizer recognizerBuilder(_ManagedTextSpan textSpan) {
     final recognizer = textSpan.recognizerBuilder?.call();
     if (recognizer != null) {
       if (SpanBuilderWidget.debugPrint) {
@@ -190,7 +190,7 @@ List<InlineSpan> _computeSpans(String text, List<SpanPosition> entities,
       output.add(TextSpan(text: text.substring(currentIndex, entity.start)));
     }
     final span = entity.span;
-    if (span is _FixedTextSpan) {
+    if (span is _ManagedTextSpan) {
       final managedRecognizer = recognizerBuilder?.call(span);
       output.add(span.withManagedRecognizer(managedRecognizer));
     } else {
