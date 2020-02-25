@@ -89,12 +89,16 @@ class SpanBuilder {
       }
     }
 
+    final offset = from ?? 0;
+
+    final _sourceText = sourceText.substring(from ?? 0, to ?? sourceText.length);
+
     if (whereText != null) {
-      from = sourceText.indexOf(whereText);
+      from = _sourceText.indexOf(whereText);
       to = from + whereText.length;
     }
 
-    entities.add(SpanPosition(start: from, end: to, span: span));
+    entities.add(SpanPosition(start: offset + from, end: offset + to, span: span));
     return this;
   }
 
