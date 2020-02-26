@@ -1,8 +1,7 @@
 name: span_builder
-description: Apply flutter spans to plain text based on position or matching text.
+description: Facilitates creation of spans from plain text and provides automated disposal of GestureRecognizers
 version: 0.0.1
-author:
-homepage:
+homepage: https://github.com/eyeem/span_builder
 
 environment:
   sdk: ">=2.6.0 <3.0.0"

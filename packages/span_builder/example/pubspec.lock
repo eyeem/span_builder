@@ -142,6 +142,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  span_builder_test:
+    dependency: "direct dev"
+    description:
+      path: "../../span_builder_test"
+      relative: true
+    source: path
+    version: "0.0.1"
   stack_trace:
     dependency: transitive
     description:

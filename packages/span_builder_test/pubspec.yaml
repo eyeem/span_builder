@@ -1,8 +1,7 @@
 name: span_builder_test
-description: WidgetTest helpers and extensions for testing span_builder
+description: WidgetTester helpers and extensions for testing span_builder
 version: 0.0.1
-author:
-homepage:
+homepage: https://github.com/eyeem/span_builder_test
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
