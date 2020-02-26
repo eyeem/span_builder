@@ -37,7 +37,6 @@ class MyApp extends StatelessWidget {
                           ..apply(const TextSpan(text: "🐶"), whereText: "dog"),
                         defaultStyle:
                             TextStyle(color: Colors.black, fontSize: 32.0),
-                        richTextBuilder: (text) => RichText(
-                            text: text, textAlign: TextAlign.center))))));
+                        textAlign: TextAlign.center)))));
   }
 }

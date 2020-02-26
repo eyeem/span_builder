@@ -155,16 +155,24 @@ class SpanBuilder {
       _computeSpans(sourceText, _entities, recognizerBuilder);
 }
 
+/// A wrapper around [RichText] allowing you to use [SpanBuilder]
 /// poorly designed facility widget to help dispose recognizers from TextSpans
 /// ...off product of some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
 class SpanBuilderWidget extends StatefulWidget {
-  const SpanBuilderWidget({
-    Key key,
-    @required this.richTextBuilder,
-    @required this.text,
-    this.defaultStyle,
-  }) : super(key: key);
-  final RichText Function(InlineSpan inlineSpan) richTextBuilder;
+  const SpanBuilderWidget(
+      {Key key,
+      @required this.text,
+      this.defaultStyle,
+      this.textAlign = TextAlign.start,
+      this.textDirection,
+      this.softWrap = true,
+      this.overflow = TextOverflow.clip,
+      this.textScaleFactor = 1.0,
+      this.maxLines,
+      this.locale,
+      this.strutStyle,
+      this.textWidthBasis = TextWidthBasis.parent})
+      : super(key: key);
   final SpanBuilder text;
   final TextStyle defaultStyle;
 
@@ -173,6 +181,17 @@ class SpanBuilderWidget extends StatefulWidget {
 
   /// usful for verifying if recognizer are indeed being disposed
   static bool debugPrint = false;
+
+  /// wrapping [RichText] fields
+  final TextAlign textAlign;
+  final TextDirection textDirection;
+  final bool softWrap;
+  final TextOverflow overflow;
+  final double textScaleFactor;
+  final int maxLines;
+  final Locale locale;
+  final StrutStyle strutStyle;
+  final TextWidthBasis textWidthBasis;
 }
 
 class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
@@ -224,7 +243,18 @@ class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.richTextBuilder(_textSpan);
+  Widget build(BuildContext context) => RichText(
+        text: _textSpan,
+        textAlign: widget.textAlign,
+        textDirection: widget.textDirection,
+        softWrap: widget.softWrap,
+        overflow: widget.overflow,
+        textScaleFactor: widget.textScaleFactor,
+        maxLines: widget.maxLines,
+        locale: widget.locale,
+        strutStyle: widget.strutStyle,
+        textWidthBasis: widget.textWidthBasis,
+      );
 
   @override
   void dispose() {

@@ -34,10 +34,7 @@ void main() {
           tapped = true;
         })
         ..apply(const TextSpan(text: "🦊"), whereText: "fox"),
-      richTextBuilder: (text) => RichText(
-        text: text,
-        textDirection: TextDirection.ltr,
-      ),
+      textDirection: TextDirection.ltr,
     ));
 
     expect(find.byType(SpanBuilderWidget), findsOneWidget);
@@ -136,10 +133,7 @@ class _FakeSpanShifterState extends State<StatefulWidget> {
             }),
         SpanBuilderWidget(
             text: texts[counter % texts.length],
-            richTextBuilder: (text) => RichText(
-                  text: text,
-                  textDirection: TextDirection.ltr,
-                )),
+            textDirection: TextDirection.ltr),
       ],
     );
   }
