@@ -10,10 +10,11 @@ readme = """# Span Builder For Flutter
 
 #{span_builder_test_md}
 
-### Read More
+### Related Content
 
-- [Make text styling more effective with RichText widget](https://medium.com/flutter-community/make-text-styling-more-effective-with-richtext-widget-b0e0cb4771ef) by _Darshan Kawar
-_
+- [RichText (Flutter Widget of the Week)](https://www.youtube.com/watch?v=rykDVh-QFfw)
+- [Make text styling more effective with RichText widget](https://medium.com/flutter-community/make-text-styling-more-effective-with-richtext-widget-b0e0cb4771ef) by _Darshan Kawar_
+- [CSS Text Flutter Library](https://pub.dev/packages/css_text)
 """
 
 File.write("README.md", readme)
