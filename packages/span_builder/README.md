@@ -4,7 +4,7 @@ Facilitates creation of spans from plain text and provides automated disposal of
 
 ### Description
 
-Given some plain text, e.g.: __"The quick brown fox"__ allows you to `apply` multiple spans at multiple positions. Positions can be specified by a matching word (`whereText`), that is e.g. __"brown"__ or/and range `from=10, to=15`. Spans are subclasses of `InlineSpan`. If the span you are trying to apply is `TextSpan` you don't need to pass `whereText` as it will be inferred from text within the provided span.
+Given some plain text, e.g.: __"The quick brown fox"__ allows you to `apply` multiple spans at multiple positions. Positions can be specified by a matching word (`whereText`), e.g. __"brown"__ and/or range `from=10, to=15`. Spans are subclasses of `InlineSpan`. If the span you are trying to apply is `TextSpan` you don't need to pass `whereText` as it will be inferred from text within the provided span.
 
 Once you are done using `SpanBuilder`, use `build()` to return calculated list of spans.
 
@@ -42,7 +42,7 @@ apply(TextSpan(text: "jumps"),
   })
 ```
 
-...and then use `SpanBuilder` together with `SpanBuilderWidget` which will manage creating and disposing `TapGestrueRecognizer` at right time:
+...and then use `SpanBuilder` together with `SpanBuilderWidget` which will manage creating and disposing `TapGestrueRecognizer` at the right time:
 
 ```dart
 SpanBuilderWidget(
@@ -68,4 +68,23 @@ SpanBuilderWidget(
 
 ### Testing:
 
+There are little resources on how to test RichText in general. For this reason there is helper testing library `span_builder_test` that can help you verify state of your spans in your UI tests.
 
+```dart
+void main() {
+  testWidgets('MyApp test', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp());
+
+    final spanFinder = find.byKey(span_key);
+
+    expect(spanFinder, findsOneWidget);
+    final allSpans = tester.findSpans(spanFinder).length;
+    expect(allSpans, 8);
+
+    final foxSpans = tester.findSpans(spanFinder, predicate: (span) {
+      return span is TextSpan && span.text == "🦊"; 
+    });
+    expect(foxSpans.length, 1);
+  });
+}
+```

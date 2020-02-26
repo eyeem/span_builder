@@ -1,12 +1,21 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility that Flutter provides. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:example/main.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:span_builder_test/span_builder_test.dart';
 
 void main() {
-  testWidgets('todo', (WidgetTester tester) async {});
+  testWidgets('MyApp test', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp());
+
+    final spanFinder = find.byKey(span_key);
+
+    expect(spanFinder, findsOneWidget);
+    final allSpans = tester.findSpans(spanFinder).length;
+    expect(allSpans, 8);
+
+    final foxSpans = tester.findSpans(spanFinder, predicate: (span) {
+      return span is TextSpan && span.text == "🦊";
+    });
+    expect(foxSpans.length, 1);
+  });
 }

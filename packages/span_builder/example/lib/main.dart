@@ -5,6 +5,7 @@ void main() => runApp(MyApp());
 
 // non breaking space
 const nbsp = '\u00A0';
+const span_key = ValueKey("span_key");
 
 class MyApp extends StatelessWidget {
   @override
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
             body: Builder(
                 builder: (context) => Center(
                     child: SpanBuilderWidget(
+                        key: span_key,
                         text: SpanBuilder(
                             "The quick brown fox jumps${nbsp}over the lazy dog")
                           ..apply(const TextSpan(

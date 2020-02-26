@@ -16,6 +16,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  span_builder_test:
+    path: ../../span_builder_test
 
 flutter:
 

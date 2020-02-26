@@ -5,17 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 /// https://github.com/flutter/flutter/blob/master/packages/flutter/test/widgets/hyperlink_test.dart#L47
 /// sooo...
 extension WidgetTesterRichEditExtension on WidgetTester {
-  Iterable<InlineSpan> findTextSpans(
-      Finder richTextFinder, bool Function(InlineSpan) predicate) {
+  Iterable<InlineSpan> findSpans(Finder spanWidgetFinder,
+      {bool Function(InlineSpan) predicate}) {
+    final richTextFinder =
+        find.descendant(of: spanWidgetFinder, matching: find.byType(RichText));
     final richText = widget<RichText>(richTextFinder);
     expect(richText.text, isInstanceOf<TextSpan>());
     final TextSpan innerText = richText.text;
-    return innerText.children.where(predicate);
+    return predicate == null
+        ? innerText.children
+        : innerText.children.where(predicate);
   }
-}
-
-extension SpanBuilderRichTextFinderExtension on Finder {
-  /// given a finder for [SpanBuilderWidget]
-  Finder descendingRichText() =>
-      find.descendant(of: this, matching: find.byType(RichText));
 }
