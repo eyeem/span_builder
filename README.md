@@ -2,6 +2,8 @@
 
 ## span_builder
 
+![span_builder](https://user-images.githubusercontent.com/121164/75353447-b6ef2800-58ab-11ea-984c-3d346d20af71.png)
+
 Apply flutter spans to plain text based on position or matching text.
 
 ### Description
