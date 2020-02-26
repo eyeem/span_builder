@@ -34,9 +34,10 @@ typedef RecognizerBuilder = GestureRecognizer Function();
 typedef _RecognizerBuilder = GestureRecognizer Function(_ManagedTextSpan);
 
 /// Due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
-/// you need to dispose "text links" & we don't want to handle recongnizer lifecycle inside [StringBuilder]
-/// as we want to reuse [StringBuilder] therefore here is this class that will create us TextSpans with recognizers
-/// managed by whoever that is passing [RecognizerBuilder] to the [asManagedTextSpan]
+/// you need to dispose [TextSpan]'s [GestureRecognizer] yourself. When you are formatting text, thinking about
+/// disposing resources and widget lifecycle is probably the last thing that will cross your mind. For this reason
+/// rather than accepting [GestureRecognizer] instance in constructor we expect builder method that is supposed
+/// to provide us with a managed [GestureRecognizer] by [SpanBuilderWidget]
 class _ManagedTextSpan extends TextSpan {
   const _ManagedTextSpan({
     this.recognizerBuilder,
@@ -73,7 +74,7 @@ class _ManagedTextSpan extends TextSpan {
 /// USAGE:
 ///
 /// ```dart
-/// SpanBuilder("The quick brown fox")
+/// final spans = SpanBuilder("The quick brown fox")
 ///   .apply(TextSpan(text: "brown", style: TextStyle(fontWeight: FontWeight.bold)))
 ///   .apply(TextSpan(text: "🦊"), whereText: "fox")
 ///   .build()
@@ -155,9 +156,8 @@ class SpanBuilder {
       _computeSpans(sourceText, _entities, recognizerBuilder);
 }
 
-/// A wrapper around [RichText] allowing you to use [SpanBuilder]
-/// poorly designed facility widget to help dispose recognizers from TextSpans
-/// ...off product of some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
+/// A wrapper around [RichText] allowing you to use [SpanBuilder] efficiently. This class handles
+/// disposing any related instances of [GestureRecognizer] that might be used in your text.
 class SpanBuilderWidget extends StatefulWidget {
   const SpanBuilderWidget(
       {Key key,
