@@ -15,6 +15,14 @@ class SpanEntity {
   final int start;
   final int end;
   final InlineSpan span;
+
+  bool overlaps(SpanEntity other) {
+    return (other.start < end && other.start >= start) ||
+        (other.end <= end && other.end >= start);
+  }
+
+  @override
+  String toString() => "<$start, $end> $span";
 }
 
 extension ManagedTextSpanExtension on TextSpan {
@@ -73,7 +81,7 @@ class _ManagedTextSpan extends TextSpan {
 class SpanBuilder {
   SpanBuilder(this.sourceText);
   final String sourceText;
-  final entities = <SpanEntity>[];
+  final _entities = <SpanEntity>[];
 
   SpanBuilder apply(InlineSpan span,
       {String whereText,
@@ -122,13 +130,29 @@ class SpanBuilder {
     }
 
     /// finally we appen calculated SpanPosition
-    entities
-        .add(SpanEntity(start: offset + from, end: offset + to, span: span));
+    return add(SpanEntity(start: offset + from, end: offset + to, span: span));
+  }
+
+  /// we sort entities when we add them, if any of the entities is overlapping,
+  /// we throw [StateError]
+  SpanBuilder add(SpanEntity newEntity) {
+    var index = 0;
+    for (final entity in _entities) {
+      if (entity.overlaps(newEntity)) {
+        throw StateError(
+            "Unable to add $newEntity. Overlaps with existing $entity");
+      }
+      if (newEntity.end <= entity.start) {
+        break;
+      }
+      index++;
+    }
+    _entities.insert(index, newEntity);
     return this;
   }
 
   List<InlineSpan> build({_RecognizerBuilder recognizerBuilder}) =>
-      _computeSpans(sourceText, entities, recognizerBuilder);
+      _computeSpans(sourceText, _entities, recognizerBuilder);
 }
 
 /// poorly designed facility widget to help dispose recognizers from TextSpans
