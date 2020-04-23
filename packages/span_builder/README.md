@@ -31,7 +31,7 @@ If you plan to make your text "tappable" read on.
 
 If you try passing `GestrueRecognizer` as a field in `TextSpan` it will get stripped away - [HERE IS WHY](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443).
 
-__TL;DR__: We don't want to leak `GestureRecognizer` but `TextSpan` has no idea about the lifecycle of `Widget` so you need a stateful widget to keep a reference to the recognizer untill you're done with it. Sounds like a mess, right?
+__TL;DR__: We don't want to leak `GestureRecognizer` but `TextSpan` has no idea about the lifecycle of `Widget` so you need a stateful widget to keep a reference to the recognizer untill you're done with it. [Sounds like a mess](https://api.flutter.dev/flutter/painting/TextSpan/recognizer.html), right?
 
 __The workaround__ is to provide a builder for the recognizer like this:
 

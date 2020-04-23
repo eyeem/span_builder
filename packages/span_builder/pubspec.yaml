@@ -1,6 +1,6 @@
 name: span_builder
 description: Facilitates creation of spans from plain text and provides automated disposal of GestureRecognizers
-version: 0.0.1
+version: 0.1.0
 homepage: https://github.com/eyeem/span_builder
 
 environment:
