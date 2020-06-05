@@ -102,10 +102,13 @@ class SpanBuilder {
     }
 
     /// if [whereText] is not provided then we try to figure it out:
-    /// 1. from passed [TextSpan]
-    /// 2. from [from, to] range
+    /// 1. from [from, to] range (if both params are passed)
+    /// 2. from passed [TextSpan]
+    /// 3. from lousy [from, to] range
     if (whereText == null) {
-      if (span is TextSpan) {
+      if (from != null && to != null) {
+        whereText = sourceText.substring(from, to);
+      } else if (span is TextSpan) {
         whereText = span.text;
       } else {
         if (from == null && to == null) {
