@@ -1,10 +1,10 @@
 name: span_builder
 description: Facilitates creation of spans from plain text and provides automated disposal of GestureRecognizers
-version: 0.1.0
+version: 0.2.0
 homepage: https://github.com/eyeem/span_builder
 
 environment:
-  sdk: ">=2.6.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   flutter:

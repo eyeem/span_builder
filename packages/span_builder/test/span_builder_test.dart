@@ -42,12 +42,12 @@ void main() {
     expect(tapped, isFalse);
 
     final textWidget = tester.widget<RichText>(find.byType(RichText));
-    final TextSpan span = textWidget.text;
-    final spans = span.children;
+    final span = textWidget.text as TextSpan;
+    final spans = span.children!;
     expect(spans, hasLength(4));
 
     // fake tap
-    ((spans[1] as TextSpan).recognizer as TapGestureRecognizer).onTap();
+    ((spans[1] as TextSpan).recognizer as TapGestureRecognizer).onTap!();
 
     expect(tapped, isTrue);
   });

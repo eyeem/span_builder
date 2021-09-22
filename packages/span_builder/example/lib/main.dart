@@ -33,12 +33,12 @@ class MyApp extends StatelessWidget {
                                   style: TextStyle(
                                       decoration: TextDecoration.underline)),
                               onTap: () {
-                            Scaffold.of(context).showSnackBar(
+                            ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("weeeee")));
                           })
                           ..apply(const TextSpan(text: "🐶"), whereText: "dog"),
                         defaultStyle:
-                            TextStyle(color: Colors.black, fontSize: 32.0),
+                            const TextStyle(color: Colors.black, fontSize: 32.0),
                         textAlign: TextAlign.center)))));
   }
 }

@@ -10,12 +10,12 @@ void main() {
     final spanFinder = find.byKey(span_key);
 
     expect(spanFinder, findsOneWidget);
-    final allSpans = tester.findSpans(spanFinder).length;
+    final allSpans = tester.findSpans(spanFinder)?.length;
     expect(allSpans, 8);
 
     final foxSpans = tester.findSpans(spanFinder, predicate: (span) {
       return span is TextSpan && span.text == "🦊";
     });
-    expect(foxSpans.length, 1);
+    expect(foxSpans?.length, 1);
   });
 }
