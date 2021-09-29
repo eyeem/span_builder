@@ -14,6 +14,6 @@ extension WidgetTesterRichEditExtension on WidgetTester {
     final innerText = richText.text as TextSpan;
     return predicate == null
         ? innerText.children
-        : innerText.children!.where(predicate);
+        : innerText.children?.where(predicate);
   }
 }
