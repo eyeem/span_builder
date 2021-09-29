@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 /// represents position of a span in some plain text
 class SpanEntity {
   const SpanEntity(
-      {@required this.start, @required this.end, @required this.span})
+      {required this.start, required this.end, required this.span})
       : assert(start >= 0),
 
         /// we only accept _ManagedTextSpans since we must take care of managing the recognizer
@@ -26,12 +26,12 @@ class SpanEntity {
 }
 
 extension ManagedTextSpanExtension on TextSpan {
-  InlineSpan managed([RecognizerBuilder recognizerBuilder]) =>
+  InlineSpan managed([RecognizerBuilder? recognizerBuilder]) =>
       _ManagedTextSpan.fromTextSpan(this, recognizerBuilder: recognizerBuilder);
 }
 
 typedef RecognizerBuilder = GestureRecognizer Function();
-typedef _RecognizerBuilder = GestureRecognizer Function(_ManagedTextSpan);
+typedef _RecognizerBuilder = GestureRecognizer? Function(_ManagedTextSpan);
 
 /// Due to some [poor design choices](https://github.com/flutter/flutter/issues/10623#issuecomment-345790443)
 /// you need to dispose [TextSpan]'s [GestureRecognizer] yourself. When you are formatting text, thinking about
@@ -41,20 +41,20 @@ typedef _RecognizerBuilder = GestureRecognizer Function(_ManagedTextSpan);
 class _ManagedTextSpan extends TextSpan {
   const _ManagedTextSpan({
     this.recognizerBuilder,
-    String text,
-    TextStyle style,
-    String semanticsLabel,
+    String? text,
+    TextStyle? style,
+    String? semanticsLabel,
   }) : super(text: text, style: style, semanticsLabel: semanticsLabel);
   _ManagedTextSpan.fromTextSpan(TextSpan textSpan,
-      {RecognizerBuilder recognizerBuilder})
+      {RecognizerBuilder? recognizerBuilder})
       : this(
             text: textSpan.text,
             style: textSpan.style,
             semanticsLabel: textSpan.semanticsLabel,
             recognizerBuilder: recognizerBuilder);
-  final RecognizerBuilder recognizerBuilder;
+  final RecognizerBuilder? recognizerBuilder;
 
-  TextSpan withManagedRecognizer(GestureRecognizer managedRecognizer) {
+  TextSpan withManagedRecognizer(GestureRecognizer? managedRecognizer) {
     return TextSpan(
         style: style,
         text: text,
@@ -85,11 +85,11 @@ class SpanBuilder {
   final _entities = <SpanEntity>[];
 
   SpanBuilder apply(InlineSpan span,
-      {String whereText,
-      int from,
-      int to,
-      Function() onTap,
-      RecognizerBuilder recognizerBuilder}) {
+      {String? whereText,
+      int? from,
+      int? to,
+      Function()? onTap,
+      RecognizerBuilder? recognizerBuilder}) {
     /// turn any [onTap] into [RecognizerBuilder]
     if (onTap != null && recognizerBuilder == null) {
       recognizerBuilder = () => TapGestureRecognizer()..onTap = onTap;
@@ -98,7 +98,7 @@ class SpanBuilder {
     /// convert [TextSpan] into [_ManagedTextSpan] with a [RecoginzerBuilder]
     if (span is TextSpan) {
       /// ignore: avoid_as
-      span = (span as TextSpan).managed(recognizerBuilder);
+      span = span.managed(recognizerBuilder);
     }
 
     /// if [whereText] is not provided then we try to figure it out:
@@ -134,7 +134,7 @@ class SpanBuilder {
     }
 
     /// finally we appen calculated SpanPosition
-    return add(SpanEntity(start: offset + from, end: offset + to, span: span));
+    return add(SpanEntity(start: offset + from!, end: offset + to!, span: span));
   }
 
   /// we sort entities when we add them, if any of the entities is overlapping,
@@ -155,7 +155,7 @@ class SpanBuilder {
     return this;
   }
 
-  List<InlineSpan> build({_RecognizerBuilder recognizerBuilder}) =>
+  List<InlineSpan> build({_RecognizerBuilder? recognizerBuilder}) =>
       _computeSpans(sourceText, _entities, recognizerBuilder);
 }
 
@@ -163,8 +163,8 @@ class SpanBuilder {
 /// disposing any related instances of [GestureRecognizer] that might be used in your text.
 class SpanBuilderWidget extends StatefulWidget {
   const SpanBuilderWidget(
-      {Key key,
-      @required this.text,
+      {Key? key,
+      required this.text,
       this.defaultStyle,
       this.textAlign = TextAlign.start,
       this.textDirection,
@@ -177,7 +177,7 @@ class SpanBuilderWidget extends StatefulWidget {
       this.textWidthBasis = TextWidthBasis.parent})
       : super(key: key);
   final SpanBuilder text;
-  final TextStyle defaultStyle;
+  final TextStyle? defaultStyle;
 
   @override
   State<StatefulWidget> createState() => _SpanBuilderWidgetState();
@@ -187,21 +187,21 @@ class SpanBuilderWidget extends StatefulWidget {
 
   /// wrapping [RichText] fields
   final TextAlign textAlign;
-  final TextDirection textDirection;
+  final TextDirection? textDirection;
   final bool softWrap;
   final TextOverflow overflow;
   final double textScaleFactor;
-  final int maxLines;
-  final Locale locale;
-  final StrutStyle strutStyle;
+  final int? maxLines;
+  final Locale? locale;
+  final StrutStyle? strutStyle;
   final TextWidthBasis textWidthBasis;
 }
 
 class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
-  TextSpan _textSpan;
+  late TextSpan _textSpan;
   final _recongnizers = <GestureRecognizer>[];
 
-  GestureRecognizer recognizerBuilder(_ManagedTextSpan textSpan) {
+  GestureRecognizer? recognizerBuilder(_ManagedTextSpan textSpan) {
     final recognizer = textSpan.recognizerBuilder?.call();
     if (recognizer != null) {
       if (SpanBuilderWidget.debugPrint) {
@@ -268,7 +268,7 @@ class _SpanBuilderWidgetState extends State<SpanBuilderWidget> {
 
 /// CONTRACT: entities must come sorted by their appearance and should not overlap
 List<InlineSpan> _computeSpans(String text, List<SpanEntity> entities,
-    _RecognizerBuilder recognizerBuilder) {
+    _RecognizerBuilder? recognizerBuilder) {
   final output = <InlineSpan>[];
   var currentIndex = 0;
   for (final entity in entities) {
